@@ -41,27 +41,74 @@ void GameScene::Initialize() {
 		// ワールドトランスフォームの初期化
 		worldTransform_[i].Initialize();
 	}
+
+	// カメラ視点座標を設定
+	viewProjection_.target = {10, 0, 0};
+
 	// ビュープロジェクションの初期化
 	viewProjection_.Initialize();
 }
 
 void GameScene::Update() {
-	// 書式指定付き表示
-	for (size_t i = 0; i < _countof(worldTransform_); i++) {
+
+	// 視点移動
+	{
+		// 視点移動のベクトル
+		XMFLOAT3 move = {0, 0, 0};
+
+		// 視点移動の速さ
+		const float kEyeSpeed = 0.2f;
+
+		// 押した方向でベクトルを変化
+		if (input_->PushKey(DIK_W)) {
+			move = {0, 0, kEyeSpeed};
+		} else if (input_->PushKey(DIK_S)) {
+			move = {0, 0, -kEyeSpeed};
+		}
+
+		// 視点移動(ベクトルの加算)
+		viewProjection_.eye.x += move.x;
+		viewProjection_.eye.y += move.y;
+		viewProjection_.eye.z += move.z;
+
+		// 行列の再計算
+		viewProjection_.UpdateMatrix();
+
+		// デバッグ用表示
+		debugText_->SetPos(50, 50);
+		debugText_->Printf(
+		  "eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
+
+	}
+
+	// 注意点移動処理
+	{
+		// 注意点の移動ベクトル
+		XMFLOAT3 move = {0, 0, 0};
+
+		// 注意点の移動の速さ
+		const float kTargetSpeed = 0.2f;
+
+		// 押した方向で移動ベクトルを変更
+		if (input_->PushKey(DIK_LEFT)) {
+			move = {-kTargetSpeed, 0, 0};
+		} else if (input_->PushKey(DIK_RIGHT)) {
+			move = {kTargetSpeed, 0, 0};
+		}
+
+		// 注意点移動(ベクトルの加算)
+		viewProjection_.target.x += move.x;
+		viewProjection_.target.y += move.y;
+		viewProjection_.target.z += move.z;
+
+		// 行列の再計算
+		viewProjection_.UpdateMatrix();
+
+		// デバッグ用表示
 		debugText_->SetPos(50, 70);
 		debugText_->Printf(
-		  "translation:(%f, %f, %f)", worldTransform_[i].translation_.x,
-		  worldTransform_[i].translation_.y, worldTransform_[i].translation_.z);
-
-		debugText_->SetPos(50, 90);
-		debugText_->Printf(
-		  "rotation:(%f, %f, %f)", worldTransform_[i].rotation_.x, worldTransform_[i].rotation_.y,
-		  worldTransform_[i].rotation_.z);
-
-		debugText_->SetPos(50, 110);
-		debugText_->Printf(
-		  "scale:(%f, %f, %f)", worldTransform_[i].scale_.x, worldTransform_[i].scale_.y,
-		  worldTransform_[i].scale_.z);
+		  "target:(%f,%f,%f)", viewProjection_.target.x, viewProjection_.target.y,
+		  viewProjection_.target.z);
 	}
 }
 
