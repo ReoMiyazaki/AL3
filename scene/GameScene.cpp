@@ -1,6 +1,7 @@
 ﻿#include "GameScene.h"
 #include "TextureManager.h"
 #include <cassert>
+#include <random>
 
 using namespace DirectX;
 
@@ -17,43 +18,51 @@ void GameScene::Initialize() {
 
 	// ファイル名を指定してテクスチャを読み込む
 	textureHandle_ = TextureManager::Load("mario.jpg");
-
 	// 3Dモデルの生成
 	model_ = Model::Create();
 
-	// X, Y, Z方向のスケーリングを設定
-	worldTransform_.scale_ = {5.0f, 5.0f, 5.0f};
+	// 乱数シード生成器
+	std::random_device seed_gen;
+	// メルセンヌ・ツイスター
+	std::mt19937_64 engine(seed_gen());
+	// 乱数範囲(回転角用)
+	std::uniform_real_distribution<float> rotDist(0.0f, XM_2PI);
+	// 乱数範囲(座標用)
+	std::uniform_real_distribution<float> posDist(-10.0f, 10.0f);
 
-	// X, Y, Z軸周りの回転角を設定
-	worldTransform_.rotation_ = {XM_PI / 4.0f, XM_PI / 4.0f, 0.0f}; // Radの場合
-	// worldTransform_.rotation_ = {0.0f, XMConvertToRadians(45.0f), 0.0f}; // 度数法の場合
+	for (size_t i = 0; i < _countof(worldTransform_); i++) {
 
-	// X, Y, Z軸周りの平行移動を設定
-	worldTransform_.translation_ = {10.0f, 10.0f, 10.0f};
-
-	// ワールドトランスフォームの初期化
-	worldTransform_.Initialize();
-
+		// X, Y, Z方向のスケーリングを設定
+		worldTransform_[i].scale_ = {1.0f, 1.0f, 1.0f};
+		// X, Y, Z軸周りの回転角を設定
+		worldTransform_[i].rotation_ = {rotDist(engine), rotDist(engine), rotDist(engine)};
+		// X, Y, Z軸周りの平行移動を設定
+		worldTransform_[i].translation_ = {posDist(engine), posDist(engine), posDist(engine)};
+		// ワールドトランスフォームの初期化
+		worldTransform_[i].Initialize();
+	}
 	// ビュープロジェクションの初期化
 	viewProjection_.Initialize();
 }
 
 void GameScene::Update() {
 	// 書式指定付き表示
-	debugText_->SetPos(50, 70);
-	debugText_->Printf(
-	  "translation:(%f, %f, %f)", worldTransform_.translation_.x, worldTransform_.translation_.y,
-	  worldTransform_.translation_.z);
+	for (size_t i = 0; i < _countof(worldTransform_); i++) {
+		debugText_->SetPos(50, 70);
+		debugText_->Printf(
+		  "translation:(%f, %f, %f)", worldTransform_[i].translation_.x,
+		  worldTransform_[i].translation_.y, worldTransform_[i].translation_.z);
 
-	debugText_->SetPos(50, 90);
-	debugText_->Printf(
-	  "rotation:(%f, %f, %f)", worldTransform_.rotation_.x, worldTransform_.rotation_.y,
-	  worldTransform_.rotation_.z);
+		debugText_->SetPos(50, 90);
+		debugText_->Printf(
+		  "rotation:(%f, %f, %f)", worldTransform_[i].rotation_.x, worldTransform_[i].rotation_.y,
+		  worldTransform_[i].rotation_.z);
 
-	debugText_->SetPos(50, 110);
-	debugText_->Printf(
-	  "scale:(%f, %f, %f)", worldTransform_.scale_.x, worldTransform_.scale_.y,
-	  worldTransform_.scale_.z);
+		debugText_->SetPos(50, 110);
+		debugText_->Printf(
+		  "scale:(%f, %f, %f)", worldTransform_[i].scale_.x, worldTransform_[i].scale_.y,
+		  worldTransform_[i].scale_.z);
+	}
 }
 
 void GameScene::Draw() {
@@ -84,8 +93,9 @@ void GameScene::Draw() {
 	/// </summary>
 
 	// 3Dモデル描画
-	model_->Draw(worldTransform_, viewProjection_, textureHandle_);
-
+	for (size_t i = 0; i < _countof(worldTransform_); i++) {
+		model_->Draw(worldTransform_[i], viewProjection_, textureHandle_);
+	}
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
 #pragma endregion
