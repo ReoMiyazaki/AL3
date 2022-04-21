@@ -43,7 +43,9 @@ void GameScene::Initialize() {
 	}
 
 	// カメラ視点座標を設定
-	viewProjection_.up = {cosf(XM_PI / 4.0f), sinf(XM_PI / 4.0f), 0.0f };
+	viewProjection_.eye = {0, 0, -15};                                   // 視点
+	viewProjection_.target = {10, 0, 0};                                 // 注視点
+	viewProjection_.up = {cosf(XM_PI / 4.0f), sinf(XM_PI / 4.0f), 0.0f}; // 上方向ベクトル
 
 	// ビュープロジェクションの初期化
 	viewProjection_.Initialize();
@@ -78,7 +80,6 @@ void GameScene::Update() {
 		debugText_->SetPos(50, 50);
 		debugText_->Printf(
 		  "eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
-
 	}
 
 	// 注意点移動処理
